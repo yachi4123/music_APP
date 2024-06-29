@@ -18,7 +18,7 @@ class App extends StatelessWidget {
     Get.put(AuthController());
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Flutter Firebase Auth',
+      title: 'Login Page',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
