@@ -16,6 +16,7 @@ class _SignUpState extends State<SignUpPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,7 +54,7 @@ class _SignUpState extends State<SignUpPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  height: 170,
+                  height: 180,
                   width: 325,
                   child:Column(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -65,8 +66,8 @@ class _SignUpState extends State<SignUpPage> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             hintText: "Email",
-                            hintStyle: TextStyle(color: CustomColors.secondaryColor),
-                            prefixIcon: Icon(Icons.email, color: CustomColors.secondaryColor,),
+                            hintStyle: TextStyle(color: TextColors.SecondaryTextColor),
+                            prefixIcon: Icon(Icons.email, color: TextColors.SecondaryTextColor,),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide(
@@ -92,14 +93,14 @@ class _SignUpState extends State<SignUpPage> {
                           obscureText: !passwordVisible,
                           decoration: InputDecoration(
                             hintText: "Password",
-                            hintStyle: TextStyle(color: CustomColors.secondaryColor),
-                            prefixIcon: Icon(Icons.lock, color: CustomColors.secondaryColor,),
+                            hintStyle: TextStyle(color: TextColors.SecondaryTextColor),
+                            prefixIcon: Icon(Icons.lock, color: TextColors.SecondaryTextColor,),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 passwordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                                color: Theme.of(context).primaryColorDark,
+                                color: TextColors.SecondaryTextColor,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -133,8 +134,7 @@ class _SignUpState extends State<SignUpPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: EdgeInsets.only(top:80),
-                  height: 200,
+                  height: 250,
                   width: 325,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,

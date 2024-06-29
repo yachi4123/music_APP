@@ -66,8 +66,8 @@ class _LoginPageState extends State<LoginPage> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             hintText: "Email",
-                            hintStyle: TextStyle(color: CustomColors.secondaryColor),
-                            prefixIcon: Icon(Icons.email, color: CustomColors.secondaryColor,),
+                            hintStyle: TextStyle(color: TextColors.SecondaryTextColor),
+                            prefixIcon: Icon(Icons.email, color: TextColors.SecondaryTextColor,),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(30),
                               borderSide: BorderSide(
@@ -93,14 +93,14 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: !passwordVisible,
                           decoration: InputDecoration(
                             hintText: "Password",
-                            hintStyle: TextStyle(color: CustomColors.secondaryColor),
-                            prefixIcon: Icon(Icons.lock, color: CustomColors.secondaryColor,),
+                            hintStyle: TextStyle(color: TextColors.SecondaryTextColor),
+                            prefixIcon: Icon(Icons.lock, color: TextColors.SecondaryTextColor,),
                             suffixIcon: IconButton(
                               icon: Icon(
                                 passwordVisible
                                 ? Icons.visibility
                                 : Icons.visibility_off,
-                                color: Theme.of(context).primaryColorDark,
+                                color: TextColors.SecondaryTextColor,
                               ),
                               onPressed: () {
                                 setState(() {

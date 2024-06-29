@@ -36,6 +36,11 @@ dependencies:
   google_sign_in: 
   email_validator:
   provider:
+  cloud_firestore:
+  image_picker:
+  firebase_storage:
+  just_audio: ^0.9.38
+  jiosaavn: ^0.1.0
   meta:
   flutter:
     sdk: flutter
