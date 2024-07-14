@@ -1,4 +1,5 @@
 import 'package:app1/constants/style.dart';
+import 'package:app1/user_controller.dart';
 import 'package:app1/user_data.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -7,6 +8,8 @@ import 'package:app1/widgets/navbar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app1/assets/images.dart';
 import 'package:app1/widgets/bottom_bar.dart';
+import 'package:app1/music_controller.dart';
+import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -16,7 +19,9 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  final MusicController musicController = Get.find<MusicController>();
   final AuthController authController = Get.find();
+  final UserController userController = Get.find<UserController>();
   final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -26,6 +31,30 @@ class _ProfilePageState extends State<ProfilePage> {
     profileURL = user?.photoURL??userProfileURL;
     super.initState();
   }
+
+  Future<bool> _showExitConfirmationDialog() async {
+    return await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: CustomColors.secondaryColor,
+        content: Text('Are you sure you want to logout?', style: TextStyle(color: TextColors.PrimaryTextColor),),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () {
+              authController.signOut();
+              Get.offNamed('/login');
+            },
+            child: Text('Yes'),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -36,16 +65,16 @@ class _ProfilePageState extends State<ProfilePage> {
         backgroundColor: CustomColors.backgroundColor,
         leading: IconButton(
           onPressed: () {
-          Get.offNamed('/home');
+          Get.back();
           },
         icon: Icon(Icons.arrow_back_ios, color: TextColors.PrimaryTextColor,),
         ),
-        title: Text("Profile", style: TextStyle(fontSize: 20, color: TextColors.PrimaryTextColor),),
+        title: Text("Profile", style: TextStyle(fontSize: 22, color: TextColors.PrimaryTextColor),),
         centerTitle: true,
         actions: [
           IconButton(
             onPressed: () {
-              Get.offNamed('/edit_profile');
+              Get.toNamed('/edit_profile');
             },
             icon: Icon(Icons.edit, color: TextColors.PrimaryTextColor,),
           ),
@@ -58,8 +87,7 @@ class _ProfilePageState extends State<ProfilePage> {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Container(
-            padding: EdgeInsets.only(top: 20),
-            height: 180,
+            height: 160,
             child:Center(
               child: CircleAvatar(
                 radius: 80,
@@ -68,11 +96,11 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           SizedBox(
-            height: 40,
+            height: 30,
             child: Text(username, style: TextStyle(fontSize: 25, color: TextColors.PrimaryTextColor),),
           ),
           Container(
-            height: 100,
+            height: 80,
             child:Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -81,13 +109,13 @@ class _ProfilePageState extends State<ProfilePage> {
                   children: [
                     Column(
                       children: [
-                        Text("10",style: TextStyle(fontSize: 25, color: TextColors.PrimaryTextColor),),
+                        Text(userController.friendsList.length.toString(),style: TextStyle(fontSize: 25, color: TextColors.PrimaryTextColor),),
                         Text("Friends",style: TextStyle(fontSize: 15, color: TextColors.PrimaryTextColor),),
                       ],
                     ),
                     Column(
                       children: [
-                        Text("15",style: TextStyle(fontSize: 25, color: TextColors.PrimaryTextColor),),
+                        Text((musicController.myPlaylists.length-1).toString(),style: TextStyle(fontSize: 25, color: TextColors.PrimaryTextColor),),
                         Text("Playlists",style: TextStyle(fontSize: 15, color: TextColors.PrimaryTextColor),),
                       ],
                     ),
@@ -97,7 +125,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           Container(
-            height: 160,
+            height: 240,
             //color: Colors.green,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -121,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         ),
                         IconButton(
                           onPressed: (){
-
+                            Get.toNamed('/friends');
                           },
                         icon: Icon(Icons.arrow_forward_ios, color: TextColors.PrimaryTextColor,),
                         )
@@ -155,12 +183,39 @@ class _ProfilePageState extends State<ProfilePage> {
                       ],
                     ),
                   ),
-                )
+                ),
+                Center(
+                  child:Container(
+                    height: 60,
+                    width:340,
+                    decoration: BoxDecoration(
+                      color: CustomColors.backgroundColor,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [BoxShadow(color: TextColors.SecondaryTextColor, blurRadius: 2, spreadRadius: 1.5)],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Icon(Icons.download,size:30, color: TextColors.PrimaryTextColor,),
+                        Text("Downloads", style: TextStyle(fontSize: 18, color: TextColors.PrimaryTextColor),),
+                        SizedBox(
+                          width: 90,
+                        ),
+                        IconButton(
+                          onPressed: (){
+                            Get.toNamed('/downloads');
+                          },
+                        icon: Icon(Icons.arrow_forward_ios, color: TextColors.PrimaryTextColor,),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
-            height: 180,
+            height: 170,
             decoration: BoxDecoration(
               border: Border(
                 bottom: BorderSide(
@@ -172,8 +227,7 @@ class _ProfilePageState extends State<ProfilePage> {
             child: Center(
               child:InkWell(
                 onTap: (){
-                  authController.signOut();
-                  Get.offNamed('/login');
+                  _showExitConfirmationDialog();
                 },
                 child: Container(
                   height: 50,

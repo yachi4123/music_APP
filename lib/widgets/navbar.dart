@@ -37,7 +37,7 @@ class _NavbarState extends State<Navbar> {
     bool isSelected = (currentIndex == index);
     return GestureDetector(
       onTap: () {
-        Get.offNamed(route);
+        Get.toNamed(route);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

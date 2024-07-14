@@ -8,14 +8,14 @@ import 'package:app1/assets/images.dart';
 import 'package:app1/constants/style.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class PlaylistPage extends StatefulWidget {
-  const PlaylistPage({super.key});
+class GenrePage extends StatefulWidget {
+  const GenrePage({super.key});
 
   @override
-  State<PlaylistPage> createState() => _PlaylistPageState();
+  State<GenrePage> createState() => _GenrePageState();
 }
 
-class _PlaylistPageState extends State<PlaylistPage> {
+class _GenrePageState extends State<GenrePage> {
   final MusicController musicController = Get.find<MusicController>();
   final user = FirebaseAuth.instance.currentUser;
 
@@ -23,7 +23,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
   void initState() {
     username = user?.displayName??"user";
     profileURL = user?.photoURL?? userProfileURL;
-    GlobalVariable.instance.myGlobalVariable = 2;
     super.initState();
   }
 
@@ -41,23 +40,25 @@ class _PlaylistPageState extends State<PlaylistPage> {
             },
           icon: Icon(Icons.arrow_back_ios, color: TextColors.PrimaryTextColor,),
           ),
+          title: Text(
+            musicController.currentGenre,
+            style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 30, fontWeight: FontWeight.w300)
+          ),
+          centerTitle: true,
         ),
         body: Stack(
           children: [
-            Container(
-              width: double.infinity,
-              height: double.infinity,
-              child: Column(
-                children: [
+            Column(
+              children: [
                   Container(
                     width: 400,
-                    height: 78,
-                    padding: EdgeInsets.only(top: 10,bottom: 30, left: 15),
+                    height: 70,
+                    padding: EdgeInsets.only(top: 20,bottom: 20, left: 15),
                     child: Row(
                     children: [
                       Text(
-                      musicController.currentPlaylistName,
-                      style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 30, fontWeight: FontWeight.w300),
+                      "Top ${musicController.currentGenre} Artists",
+                      style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 22, fontWeight: FontWeight.w300),
                       overflow: TextOverflow.ellipsis,
                       ),
                       Container(
@@ -67,22 +68,79 @@ class _PlaylistPageState extends State<PlaylistPage> {
                     ]
                     )
                   ),
-                    Expanded(
+                  Container(
+                    height: 220,
+                    margin: EdgeInsets.only(left: 15,right: 15),
                     child: Obx(() {
-                      if(musicController.currentPlaylist.isEmpty){
+                      if(musicController.topSongsForGenre.isEmpty){
                         return SizedBox.shrink();
                       }
                       return ListView.builder(
-                        itemCount: musicController.currentPlaylist.length,
+                        scrollDirection: Axis.horizontal,
+                        itemCount: musicController.topArtistsForGenre.length,
                         itemBuilder: (context, index) {
-                          final song = musicController.currentPlaylist[index];
+                          final artist = musicController.topArtistsForGenre[index];
+                          return GestureDetector(
+                            onTap: () {
+                              musicController.getArtistSongs(artist['id'], artist['name'], artist['image']);
+                            },
+                            child: Container(
+                            height: 220,
+                            width: 165,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                CircleAvatar(
+                                  backgroundImage: NetworkImage(artist['image']),
+                                  radius: 70,
+                                ),
+                                Container(
+                                  height: 80,
+                                  padding: EdgeInsets.only(top:10,left:5,right: 5),
+                                  child: Text(artist['name'],textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
+                                )
+                              ],
+                            ),
+                            )
+                          );
+                        },
+                      );
+                    }),
+                  ),
+                  Container(
+                    width: 400,
+                    height: 70,
+                    padding: EdgeInsets.only(top: 20,bottom: 20, left: 15),
+                    child: Row(
+                    children: [
+                      Text(
+                      "Top ${musicController.currentGenre} Tracks",
+                      style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 22, fontWeight: FontWeight.w300),
+                      overflow: TextOverflow.ellipsis,
+                      ),
+                      Container(
+                      width: 160,
+                      padding: EdgeInsets.only(left: 130),
+                      )
+                    ]
+                    )
+                  ),
+                  Expanded(
+                    child: Obx(() {
+                      if(musicController.topSongsForGenre.isEmpty){
+                        return SizedBox.shrink();
+                      }
+                      return ListView.builder(
+                        itemCount: musicController.topSongsForGenre.length,
+                        itemBuilder: (context, index) {
+                          final song = musicController.topSongsForGenre[index];
                           return ListTile(
                             onTap: () {
                               musicController.currentSong.value = song;
                               musicController.searchAndPlayTrack(song['name'] + " " + song['artists'][0]['name']);
                               musicController.addToRecentlyPlayed(song);
                               musicController.playlistName = musicController.currentPlaylistName;
-                              musicController.currentSongIndex = index; // Set the current song index
+                              musicController.currentSongIndex = index; 
                             },
                             contentPadding: EdgeInsets.only(left: 20, right: 5),
                             leading: Container(
@@ -120,18 +178,17 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       );
                     }),
                   )
-                  ]
-                  ),
+                ]
               ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: BottomBar(),
-            ),
-          ],
-        ),
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: BottomBar(),
+          ),
+        ]
       ),
+      )
     );
   }
 }

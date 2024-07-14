@@ -39,8 +39,18 @@ dependencies:
   cloud_firestore:
   image_picker:
   firebase_storage:
+  permission_handler:
+  path_provider:
+  flutter_downloader:
+  speech_to_text:
+  html:
+  genius_lyrics:
+  youtube_explode_dart: ^2.2.1
+  scrollable_positioned_list: ^0.3.8
   just_audio: ^0.9.38
   jiosaavn: ^0.1.0
+  intl:
+
   meta:
   flutter:
     sdk: flutter

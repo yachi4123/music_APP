@@ -1,5 +1,6 @@
 import 'package:app1/constants/style.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:app1/auth.dart';
 
@@ -16,9 +17,37 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  Future<bool> _showExitConfirmationDialog() async {
+    return await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: CustomColors.secondaryColor,
+        content: Text('Are you sure you want to exit?'),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () {
+              SystemNavigator.pop();
+            },
+            child: Text('Yes'),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async{
+        if(didPop) return;
+        await _showExitConfirmationDialog();
+      },
+    child: Scaffold(
       backgroundColor: CustomColors.backgroundColor,
       body:SafeArea(
         child:SingleChildScrollView(
@@ -169,7 +198,7 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text("Don,t have an account? ", style: TextStyle(color: TextColors.PrimaryTextColor),),
+                          Text("Don't have an account? ", style: TextStyle(color: TextColors.PrimaryTextColor),),
                           InkWell(
                             onTap: (){
                               Get.toNamed('/signup');
@@ -186,7 +215,8 @@ class _LoginPageState extends State<LoginPage> {
           ]
         ),
       ),
-    )
+    ),
+    ),
     );
   }
 }

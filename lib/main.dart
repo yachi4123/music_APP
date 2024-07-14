@@ -1,4 +1,10 @@
+import 'package:app1/pages/artist.dart';
+import 'package:app1/pages/friends.dart';
+import 'package:app1/pages/genre.dart';
+import 'package:app1/pages/lyrics.dart';
 import 'package:app1/pages/my_playlists.dart';
+import 'package:app1/pages/shared.dart';
+import 'package:app1/pages/user_profile.dart';
 import 'package:app1/widgets/navbar.dart';
 import 'package:app1/music_controller.dart';
 import 'package:flutter/material.dart';
@@ -13,10 +19,20 @@ import 'package:app1/pages/home.dart';
 import 'package:app1/pages/search.dart';
 import 'package:app1/pages/audio_player.dart';
 import 'package:app1/pages/playlist.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:app1/pages/downloads.dart';
+import 'package:app1/user_controller.dart';
+import 'package:app1/pages/user_playlists.dart';
+import 'package:app1/download_controller.dart';
+
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); 
+  await FlutterDownloader.initialize(
+    debug: true
+  );
   runApp(App());
 }
 
@@ -24,10 +40,14 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Get.put(MusicController());
+    Get.put(UserController());
     Get.put(AuthController());
+    Get.put(DownloadController());
+    final MusicController musicController = Get.find<MusicController>();
+    final user = FirebaseAuth.instance.currentUser;
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/login', 
+      initialRoute: user!=null ? '/home' : '/login',
       getPages: [
         GetPage(name: '/home', page: () => HomePage()),
         GetPage(name: '/navbar', page: () => Navbar()),
@@ -39,6 +59,14 @@ class App extends StatelessWidget {
         GetPage(name: '/audio_player', page: () => AudioPlayerPage()),
         GetPage(name: '/my_playlists', page: () => MyPlaylists()),
         GetPage(name: '/playlist', page: () => PlaylistPage()),
+        GetPage(name: '/downloads', page: () => DownloadsPage()),
+        GetPage(name: '/user_profile', page: () => UserProfilePage()),
+        GetPage(name: '/user_playlists', page: () => UserPlaylists()),
+        GetPage(name: '/friends', page: () => FriendsPage()),
+        GetPage(name: '/shared', page: () => SharedPage()),
+        GetPage(name: '/lyrics', page: () => LyricsPage()),
+        GetPage(name: '/artist', page: () => ArtistPage()),
+        GetPage(name: '/genre', page: () => GenrePage()),
       ],
     );
   }

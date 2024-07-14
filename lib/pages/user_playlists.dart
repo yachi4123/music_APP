@@ -7,24 +7,22 @@ import 'package:app1/user_data.dart';
 import 'package:app1/assets/images.dart';
 import 'package:app1/constants/style.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:app1/user_controller.dart';
 
-class MyPlaylists extends StatefulWidget {
-  const MyPlaylists({super.key});
+class UserPlaylists extends StatefulWidget {
+  const UserPlaylists({super.key});
 
   @override
-  State<MyPlaylists> createState() => _MyPlaylistsState();
+  State<UserPlaylists> createState() => _MyPlaylistsState();
 }
 
-class _MyPlaylistsState extends State<MyPlaylists> {
+class _MyPlaylistsState extends State<UserPlaylists> {
   final MusicController musicController = Get.find<MusicController>();
+   final UserController userController = Get.find<UserController>();
   final user = FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
-    username = user?.displayName??"user";
-    profileURL = user?.photoURL?? userProfileURL;
-    GlobalVariable.instance.myGlobalVariable = 2;
-    musicController.fetchPlaylists();
     super.initState();
   }
 
@@ -55,35 +53,27 @@ class _MyPlaylistsState extends State<MyPlaylists> {
                   Container(
                     width: 400,
                     height: 78,
-                    padding: EdgeInsets.only(top: 10,bottom: 30, left: 10),
+                    padding: EdgeInsets.only(top: 10,bottom: 10, left: 10),
                     child: Row(
                     children: [
-                      const Text(
-                      "My Playlists",
+                      Text(
+                      "${userController.currentDisplayUser['username']}'s Playlists",
                       style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 30, fontWeight: FontWeight.w300),
                       overflow: TextOverflow.ellipsis,
                       ),
-                      Container(
-                      width: 210,
-                      padding: EdgeInsets.only(left: 180),
-                      child: IconButton(
-                        onPressed: () {
-                          musicController.createPlaylist();
-                        },
-                        icon: Icon(Icons.playlist_add, color: TextColors.PrimaryTextColor, size: 30,),
-                      ),
-                      )
                     ]
                     )
                   ),
                     Expanded(
                     child: Obx(() {
-                      return ListView(
-                      children: musicController.myPlaylists.map((playlist)=>
-                          ListTile(
+                      return ListView.builder(
+                        padding: EdgeInsets.only(top: 10),
+                        itemCount: userController.userPlaylists.length,
+                        itemBuilder: (context, index) {
+                          var playlist = userController.userPlaylists[index];
+                          return ListTile(
                             onTap: () {
                               if (playlist['songs'] != null){
-                                musicController.fetchPlaylists();
                                 musicController.currentPlaylist.assignAll(playlist['songs']);
                                 musicController.currentPlaylistName = playlist['name'];
                               }
@@ -120,8 +110,8 @@ class _MyPlaylistsState extends State<MyPlaylists> {
                                 ],
                               ),
                             )
-                          )
-                      ).toList()
+                          );
+                        }
                       );
                     }),
                   ),

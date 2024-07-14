@@ -4,12 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:app1/user_data.dart';
 import 'package:app1/assets/images.dart';
 import 'package:app1/music_controller.dart';
+import 'package:app1/user_controller.dart';
 
 class AuthController extends GetxController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final MusicController musicController = Get.find<MusicController>();
-
+  final UserController userController = Get.find<UserController>();
   Rx<User?> currentUser = Rx<User?>(null);
 
   @override
@@ -19,7 +20,7 @@ class AuthController extends GetxController {
     _auth.authStateChanges().listen((User? user) {
       currentUser.value = user;
       if (user != null) {
-        // Navigate to home screen when user is authenticated
+      // Navigate to home screen when user is authenticated
       }
     });
   }
@@ -47,8 +48,10 @@ class AuthController extends GetxController {
           'photoURL': userProfileURL, // Profile image to be set later
           'recently_played': [],
           'playlists': [],
+          'requests': {},
         });
         musicController.createPlaylist(name : "Favourites");
+        userController.createRequestsList();
         Get.offNamed('/edit_profile'); // Redirect to profile setup page
       }
     } catch (e) {

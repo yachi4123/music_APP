@@ -12,7 +12,6 @@ String username = user?.displayName?? "user" ;
 String profileURL = user?.photoURL?? userProfileURL;
 
 class GlobalVariable {
-  // Private constructor
   GlobalVariable._privateConstructor();
 
   // The single instance of the class

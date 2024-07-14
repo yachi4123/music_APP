@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:app1/widgets/navbar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:app1/music_controller.dart';
 import 'package:app1/widgets/bottom_bar.dart';
@@ -26,18 +28,47 @@ class _HomePageState extends State<HomePage> {
     username = user?.displayName??"user";
     profileURL = user?.photoURL?? userProfileURL;
     musicController.fetchRecentlyPlayedSongs();
+    musicController.getRecommendedArtists();
     GlobalVariable.instance.myGlobalVariable = 0;
     super.initState();
   }
 
+  Future<bool> _showExitConfirmationDialog() async {
+    return await Get.dialog<bool>(
+      AlertDialog(
+        backgroundColor: CustomColors.secondaryColor,
+        content: Text('Are you sure you want to exit?', style: TextStyle(color: TextColors.PrimaryTextColor),),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(result: false),
+            child: Text('No'),
+          ),
+          TextButton(
+            onPressed: () {
+              SystemNavigator.pop();
+            },
+            child: Text('Yes'),
+          ),
+        ],
+      ),
+    ) ??
+    false;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async{
+        if(didPop) return;
+        await _showExitConfirmationDialog();
+      },
+    child: SafeArea(
     child: Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: CustomColors.backgroundColor,
       bottomNavigationBar: Navbar(),
-      body:
+      body: 
       Stack(
       children: [  
       Container(
@@ -48,7 +79,7 @@ class _HomePageState extends State<HomePage> {
           children: [
           GestureDetector(
           onTap: (){
-            Get.offNamed('/profile');
+            Get.toNamed('/profile');
           },
           child: Container(
             height: 70,
@@ -64,7 +95,7 @@ class _HomePageState extends State<HomePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("Hello",style: TextStyle(fontFamily:'Harmattan' ,fontSize: 15,color: Colors.white),),
-                        Text(username,style: TextStyle(fontFamily: 'Harmattan',fontSize: 30,fontWeight: FontWeight.w200,color: Colors.white),),
+                        Text(username,style: TextStyle(fontFamily: 'Harmattan',fontSize: 30,fontWeight: FontWeight.w200,color: Colors.white),overflow: TextOverflow.ellipsis,),
                       ],
                     ),
                     CircleAvatar(
@@ -80,7 +111,7 @@ class _HomePageState extends State<HomePage> {
 
           InkWell(
           onTap: () {
-            Get.offNamed('/search');
+            Get.toNamed('/search');
           },
           child: Container(
             height: 48,
@@ -115,7 +146,7 @@ class _HomePageState extends State<HomePage> {
           child: 
           Container (
           child: ListView(
-          children: [        // }
+          children: [        
           Obx((){
             if (musicController.recentlyPlayed.length < 3) {
             return SizedBox.shrink();
@@ -130,6 +161,11 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Text("Recently Played",style: TextStyle(fontFamily: 'Harmattan',fontSize:25, color: TextColors.PrimaryTextColor),),
                 InkWell(
+                  onTap: (){
+                    musicController.currentPlaylist = musicController.recentlyPlayed;
+                    musicController.currentPlaylistName = "Recently Played";
+                    Get.toNamed('/playlist');
+                  },
                   child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 15,color: Colors.grey),
                   ),
                 )
@@ -141,11 +177,10 @@ class _HomePageState extends State<HomePage> {
             margin: EdgeInsets.only(top: 10),
             child: ListView(
               children: musicController.recentlyPlayed.map((song)=>
-                GestureDetector(
-                  child: ListTile(
+                  ListTile(
                     onTap: (){
                       musicController.currentSong.value = song;
-                      musicController.searchAndPlayTrack(song['name']);
+                      musicController.searchAndPlayTrack(song['name']+" "+song['artists'][0]['name']);
                       musicController.addToRecentlyPlayed(song);
                     },
                     contentPadding: EdgeInsets.only(left: 20, right: 5),
@@ -176,7 +211,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   )
-                  )
               ).toList()
             ),
           ),
@@ -185,7 +219,7 @@ class _HomePageState extends State<HomePage> {
           }),
           Container(
             height: 45,
-            margin: EdgeInsets.only(top: 20,left: 15,right: 15),
+            margin: EdgeInsets.only(top: 25,left: 15,right: 15,bottom: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -195,59 +229,87 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Container(
-            height: 180,
+            height: 220,
             margin: EdgeInsets.only(left: 15,right: 15),
             child: ListView(
               scrollDirection: Axis.horizontal,
-                  children:musicController.artists.map((artist)=>
-                      Container(
-                        height: 180,
-                        width: 150,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(artist['images'][0]['url']),
-                              radius: 60,
-                            ),
-                            Container(
-                            padding: EdgeInsets.only(top:10),
-                            child: Text(artist['name'], style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
-                            )
-                          ],
+                children:musicController.discoverArtists.map((artist)=>
+                  GestureDetector(
+                    onTap: () {
+                      musicController.getArtistSongs(artist['id'], artist['name'], artist['image']);
+                    },
+                    child: Container(
+                    height: 220,
+                    width: 165,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: NetworkImage(artist['image']),
+                          radius: 70,
                         ),
-                      ),
+                        Container(
+                          height: 80,
+                          padding: EdgeInsets.only(top:10,left:5,right: 5),
+                          child: Text(artist['name'],textAlign: TextAlign.center, style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
+                        )
+                      ],
+                    ),
+                    )
+                  ),
             ).toList()
             ),
           ),
-          // Container(
-          //   height: 120,
-          //   //color: Colors.blue,
-          //   margin: EdgeInsets.only(left: 15,right: 15),
-          //   child: ListView(
-          //       scrollDirection: Axis.horizontal,
-          //       children:arrSquare.map((value)=>
-          //           Container(
-          //             height: 120,
-          //             width: 120,
-          //             //margin: EdgeInsets.only(left: 10,right: 10),
-          //             // color: Colors.green,
-          //             child: Column(
-          //               mainAxisAlignment: MainAxisAlignment.center,
-          //               children: [
-          //                 Container(
-          //                   height: 90,
-          //                   width: 90,
-          //                   child: Image.asset(value['image'].toString()),
-          //                 ),
-          //                 Text(value['singer'].toString(),style: TextStyle(fontFamily: 'Harmattan',fontSize: 18,fontWeight: FontWeight.w600,color: Colors.white),),
-          //               ],
-          //             ),
-
-          //           ),
-          //       ).toList()
-          //   ),
-          // )
+          Container(
+            height: 45,
+            margin: EdgeInsets.only(top: 20,left: 15,right: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text("Explore Different Genres",style: TextStyle(fontFamily: 'Harmattan',fontSize: 25,color: TextColors.PrimaryTextColor ),),
+                // InkWell(child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 20,color: Colors.grey),))
+              ],
+            ),
+          ),
+          Container(
+            height: 120,
+            margin: EdgeInsets.only(left: 15,right: 15),
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children:musicController.genres.map((value)=>
+              GestureDetector(
+                onTap: () {
+                  musicController.currentGenre = value;
+                  musicController.fetchTopSongsForGenre(value);
+                  musicController.fetchTopArtistsForGenre(value);
+                },
+                child: Container(
+                  height: 130,
+                  width: 120,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        height: 100,
+                        width: 100,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [CustomColors.primaryColor,CustomColors.secondaryColor],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                        child: Text(value.toString(),style: TextStyle(fontWeight: FontWeight.w300, fontFamily: 'Harmattan',fontSize: 18,color: Colors.white),),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                )
+                ).toList()
+            ),
+          ),
         Container(
             height: 45,
             margin: EdgeInsets.only(top: 20,left: 15,right: 15),
@@ -373,6 +435,7 @@ class _HomePageState extends State<HomePage> {
       child: BottomBar(),
     ),
     ]
+    ),
     ),
     ),
     );

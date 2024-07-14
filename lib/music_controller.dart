@@ -1,10 +1,19 @@
 import 'dart:convert';
+import 'package:app1/services/music.dart';
 import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'package:just_audio/just_audio.dart';
 import 'package:jiosaavn/jiosaavn.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'dart:async';
+
+class Lyric{
+  final String words;
+  final DateTime timeStamp;
+  Lyric({required this.words, required this.timeStamp});
+}
 
 class MusicController extends GetxController {
   var searchResults = [].obs;
@@ -12,14 +21,48 @@ class MusicController extends GetxController {
   var isSearchingArtists = false.obs;
   var isSearchingUsers = false.obs;
   var recentlyPlayed = <Map<String, dynamic>>[].obs;
-  var artists = <Map<String, dynamic>>[].obs;
+  var discoverArtists = <Map<String,dynamic>>[];
+  var artists = <dynamic>[].obs;
   var myPlaylists = <dynamic>[].obs;
   var currentPlaylist = <dynamic>[].obs;
+  var recommendedTracks = <dynamic>[].obs;
+  var currentSong = <String, dynamic>{}.obs; 
+  var downloads = <dynamic>[].obs;
+  var images =<dynamic>[].obs;
+  var artistSongs = <dynamic>[].obs;
+  var currentArtist = <String,String>{};
+  var topSongsForGenre = <Map<String, dynamic>>[].obs;
+  var topArtistsForGenre = <Map<String, dynamic>>[];
+  var currentSongIndex = 0;
   var currentPlaylistName = "";
-
-  var currentSong = <String, dynamic>{}.obs;
+  var currentRoute = "";
+  var previousRoute = "";
+  var currentSongUrl = "";
+  var currentDownload = "";
+  var currentImage = "";
+  var playlistName = "";
+  var currentGenre = "";
+  List<String>? lyrics;
   var isPlaying = false.obs;
-  var isSearchFieldFocused = false.obs;
+  bool fromDownloads = false;
+  bool fromSearch = false;
+  bool fromPlaylist = false;
+  bool fromRecentlyPlayed = false;
+  final List<String> genres = [
+    'pop',
+    'rock',
+    'hip hop',
+    'electronic',
+    'jazz',
+    'classical',
+    'country',
+    'metal',
+    'r&b',
+    'funk',
+    'soul',
+    'indie',
+    'punk',
+  ]; 
 
   final String clientId = 'd40584fc8ebe43ebb91e2fd5ed7509c5';
   final String clientSecret = '0ded2e036a424fb0a7c4645bdccb803c';
@@ -32,12 +75,58 @@ class MusicController extends GetxController {
     search('');
     fetchRecentlyPlayedSongs();
     fetchPlaylists();
-    fetchTopArtists();
   }
+  
+  Future<void> fetchTopSongsForGenre(String genre) async {
+  final String token = await _getAccessToken(); 
+  final int limit = 10;
 
-  void setSearchFieldFocus(bool isFocused) {
-    isSearchFieldFocused.value = isFocused;
+  final response = await http.get(
+    Uri.parse('https://api.spotify.com/v1/search?q=genre:$genre&type=track'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+    if (data['tracks'] != null && data['tracks']['items'] != null) {
+      topSongsForGenre.assignAll(List<Map<String, dynamic>>.from(data['tracks']['items']));
+    }
+  } else {
+    throw Exception('Failed to fetch top songs for genre from Spotify');
   }
+}
+
+Future<void> fetchTopArtistsForGenre(String genre) async {
+  final String token = await _getAccessToken(); // Function to get Spotify access token
+  final int limit = 10; // Adjust the number of top artists you want to fetch
+  var topArtists = <Map<String, dynamic>>[].obs;
+  final response = await http.get(
+    Uri.parse('https://api.spotify.com/v1/search?q=genre:$genre&type=artist&limit=$limit'),
+    headers: {
+      'Authorization': 'Bearer $token',
+    },
+  );
+  if (response.statusCode == 200) {
+    final Map<String, dynamic> data = json.decode(response.body);
+
+    if (data['artists'] != null && data['artists']['items'] != null) {
+      topArtists.assignAll(List<Map<String, dynamic>>.from(data['artists']['items']));
+    }
+    for(var item in topArtists){
+      Map<String,dynamic> map = {};
+      map.addAll({
+        'name': item['name'],
+        'id': item['id'],
+        'image': item['images'][0]['url']
+      });
+      topArtistsForGenre.add(map);
+    }
+  } else {
+    throw Exception('Failed to fetch top artists for genre from Spotify');
+  }
+  Get.toNamed('/genre');
+}
 
   Future<String> _getAccessToken() async {
     final response = await http.post(
@@ -50,7 +139,6 @@ class MusicController extends GetxController {
         'grant_type': 'client_credentials',
       },
     );
-
     if (response.statusCode == 200) {
       final Map<String, dynamic> data = json.decode(response.body);
       return data['access_token'];
@@ -66,7 +154,7 @@ class MusicController extends GetxController {
           .collection('users')
           .where('username', isGreaterThanOrEqualTo: query)
           .where('username', isLessThanOrEqualTo: query + '\uf8ff')
-          .where('userId', isNotEqualTo: FirebaseAuth.instance.currentUser?.uid)
+          .where('username', isNotEqualTo: FirebaseAuth.instance.currentUser?.displayName)
           .get();
 
       if (response.docs.isEmpty) {
@@ -108,13 +196,56 @@ class MusicController extends GetxController {
     }
   }
 
+  Future<void> getSongLyrics(String trackName) async {
+    Future<void> fetchLyrics() async {
+      final response = await http.get(
+          Uri.parse('https://paxsenixofc.my.id/server/getLyricsMusix.php?q=${currentSong['name']}&type=default'));
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        lyrics = data['lyrics'].split('\n');
+        print(lyrics);
+      } else {
+        throw Exception('Failed to load lyrics');
+      }
+    }
+  }
+
+
+  Future<void> playFromFile(String filePath) async{
+    await audioPlayer.setFilePath(filePath);
+    fromDownloads = true;
+    isPlaying.value = true;
+    audioPlayer.play();
+  }
+
   Future<void> searchAndPlayTrack(String trackName) async {
+    // final jiosaavn = JioSaavnClient();
+    // final data = await jiosaavn.search.songs(trackName);
+    //   if(data.results[0].downloadUrl != null){
+    //     await audioPlayer.setUrl(data.results[0].downloadUrl?[0].link ?? " ");
+    //     audioPlayer.play();
+    //     isPlaying.value = true;
+    //     fromDownloads = false;
+    //   }
+    final yt = YoutubeExplode();
+    final result = await yt.search.search(trackName+"official audio");
+    final videoId = result.first.id.value;
+    var manifest = await yt.videos.streamsClient.getManifest(videoId);
+    var audioUrl = manifest.audioOnly.first.url;
+    if(audioUrl.toString() != ""){
+        await audioPlayer.setUrl(audioUrl.toString());
+        audioPlayer.play();
+        isPlaying.value = true;
+        fromDownloads = false;
+      }
+  }
+
+  Future<void> setUrl(String trackName) async{
     final jiosaavn = JioSaavnClient();
     final data = await jiosaavn.search.songs(trackName);
       if(data.results[0].downloadUrl != null){
-        await audioPlayer.setUrl(data.results[0].downloadUrl?[0].link ?? " ");
-        audioPlayer.play();
-        isPlaying.value = true;
+        currentSongUrl = data.results[0].downloadUrl?[0].link ?? " ";
       }
   }
 
@@ -130,6 +261,108 @@ class MusicController extends GetxController {
 
   void seekDuration(double value) {
     audioPlayer.seek(Duration(milliseconds: value.toInt()));
+  }
+
+  Future<void> getRecommendations(String id) async {
+    final url = Uri.parse('https://api.spotify.com/v1/recommendations?seed_tracks=$id');
+    final String token = await _getAccessToken();
+    final response = await http.get(url, headers: {
+      'Authorization': 'Bearer $token',
+    });    
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      recommendedTracks.assignAll(data['tracks']);
+    } else {
+      throw Exception('Failed to load recommendations');
+    }
+  }
+
+  Future<void> getRecommendedArtists() async {
+    fetchRecentlyPlayedSongs();
+    final String token = await _getAccessToken();
+    List<String> seedArtists = [];
+      for (var item in recentlyPlayed) {
+        seedArtists.add(item['id']);
+      }
+    final seedArtistsParam = seedArtists.take(5).join(',');
+    final url = Uri.parse('https://api.spotify.com/v1/recommendations?seed_tracks=$seedArtistsParam');
+    final response = await http.get(url, headers: {
+      'Authorization': 'Bearer $token',
+    });
+
+    if (response.statusCode == 200) {
+      discoverArtists.clear();
+      final data = json.decode(response.body);
+      for(var item in data['tracks']){
+        var map = <String,dynamic>{};
+        final response = await http.get(
+          Uri.parse('https://api.spotify.com/v1/artists/${item['album']['artists'][0]['id']}'),
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        );
+        if (response.statusCode == 200) {
+          final Map<String, dynamic> data = json.decode(response.body);
+          if (data['images'] != null) {
+            map['image']=data['images'][0]['url'];
+          }
+        }
+        map['id']=item['album']['artists'][0]['id'];
+        map['name']=item['album']['artists'][0]['name'];
+        discoverArtists.removeWhere((element) => element['id'] == map['id']);
+        if(map['id']!=null && map['name']!=null && map['image']!=null);
+        discoverArtists.add(map);
+        discoverArtists.removeWhere((element) => element['name'] == map['Various Artists']);
+      }      
+    } else {
+      throw Exception('Failed to load recommendations');
+    }
+  }
+
+  Future<void> getArtistSongs(String id, String name, String? url) async {
+    final String token = await _getAccessToken(); // Function to get Spotify access token
+    artistSongs.clear();
+    currentArtist.clear();
+    if(url==null){
+      final response = await http.get(
+        Uri.parse('https://api.spotify.com/v1/artists/${currentSong['album']['artists'][0]['id']}'),
+        headers: {
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['images'] != null) {
+          url=data['images'][0]['url'];
+        }
+      }
+    }
+    currentArtist['name'] = name;
+    currentArtist['image'] = url??"";
+    final response = await http.get(
+      Uri.parse('https://api.spotify.com/v1/artists/$id/top-tracks'),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['tracks'] != null) {
+        for(var item in data['tracks']){
+          var map = <String,String>{};
+          // map['id']=item['id'];
+          // map['name']=item['name'];
+          // map['image']=item['album']['images'][0]['url'];
+          // map['artist']=item['artists'][0]['name'];
+          // map['artistId']=item['artists'][0]['id'];
+          artistSongs.add(item);
+        }
+        currentPlaylist.assignAll(artistSongs);
+        Get.toNamed('/artist');
+      }
+    } else {
+      throw Exception('Failed to fetch top songs for artist from Spotify');
+    }
   }
 
   Future<void> createPlaylist({String? name}) async {
@@ -226,8 +459,8 @@ class MusicController extends GetxController {
       recentlyPlayed.removeWhere((element) => element['id'] == song['id']);
       recentlyPlayed.insert(0, song);
 
-      if (recentlyPlayed.length > 15) {
-        recentlyPlayed = recentlyPlayed.sublist(0, 15);
+      if (recentlyPlayed.length > 20) {
+        recentlyPlayed = recentlyPlayed.sublist(0, 20);
       }
 
       await userDoc.update({'recently_played': recentlyPlayed});
@@ -251,26 +484,5 @@ class MusicController extends GetxController {
     }
   }
 
-  Future<void> fetchTopArtists() async {
-    final String token = await _getAccessToken(); // Function to get Spotify access token
-    const String country = 'IN'; // Country code for India
-    const int limit = 20; // Limit to fetch top 20 artists
 
-    final response = await http.get(
-      Uri.parse('https://api.spotify.com/v1/search?type=artist&limit=$limit&q=genre:pop'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> data = json.decode(response.body);
-
-      if (data['artists'] != null && data['artists']['items'] != null) {
-        artists.assignAll(List<Map<String, dynamic>>.from(data['artists']['items']));
-      }
-    } else {
-      throw Exception('Failed to fetch top artists from Spotify');
-    }
-  }
 }

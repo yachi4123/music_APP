@@ -158,7 +158,6 @@ class _UpdateProfileState extends State<UpdateProfilePage> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Container(
-              
               height: 160,
               child:Center(
                 child: GestureDetector(

@@ -6,6 +6,13 @@ import 'package:app1/music_controller.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app1/widgets/navbar.dart';
+import 'package:app1/download_controller.dart';
+import 'package:app1/user_controller.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter_downloader/flutter_downloader.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 
 class AudioPlayerPage extends StatefulWidget {
   const AudioPlayerPage({super.key});
@@ -17,12 +24,44 @@ class AudioPlayerPage extends StatefulWidget {
 class _AudioPlayerPageState extends State<AudioPlayerPage> {
   final AuthController authController = Get.find();
   final MusicController musicController = Get.find<MusicController>();
+  final UserController userController = Get.find<UserController>();
   final user = FirebaseAuth.instance.currentUser;
   bool liked = false;
+  // bool permissionGranted = false;
+  List<FileSystemEntity> SongFiles = [];
+  List<FileSystemEntity> ImagesFiles = [];
+  Directory? downloadDirectory;
+  Directory? songsDirectory;
+  Directory? imagesDirectory;
+  var playlistName = "";
+
+
   @override
   void initState(){
     super.initState();
     checkIfSongIsInFavourites();
+    initializeDownloadDirectory();
+    listDownloadedFiles();
+  }
+
+  Future<void> playNextTrack() async{
+      print(musicController.currentSongIndex);
+      setState(() {  
+      musicController.currentSongIndex >=musicController.currentPlaylist.length-1
+      ?musicController.currentSongIndex = 0
+      :musicController.currentSongIndex = musicController.currentSongIndex + 1;
+      musicController.currentSong.value = musicController.currentPlaylist[musicController.currentSongIndex];
+      }); 
+  }
+
+  Future<void> playPreviousTrack() async{
+      print(musicController.currentSongIndex);
+      setState(() {  
+      musicController.currentSongIndex == 0
+      ?musicController.currentSongIndex = musicController.currentPlaylist.length-1
+      :musicController.currentSongIndex = musicController.currentSongIndex - 1;
+      musicController.currentSong.value = musicController.currentPlaylist[musicController.currentSongIndex];
+      }); 
   }
 
   Future<void> checkIfSongIsInFavourites() async {
@@ -38,6 +77,200 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
     final seconds = twoDigits(duration.inSeconds.remainder(60));
     return '$minutes:$seconds';
   }
+
+  Future<void> checkPermission() async {
+    var status = await Permission.storage.status;
+    if (await Permission.storage.request().isGranted ||
+        await Permission.accessMediaLocation.request().isGranted ||
+        await Permission.manageExternalStorage.request().isGranted ||
+        await Permission.audio.request().isGranted) {
+      String songUrl = musicController.currentSongUrl;
+      String songName = musicController.currentSong['name'] + "." + musicController.currentSong['artists'][0]['name'];
+      String imageUrl = musicController.currentSong['album']['images'][0]['url'];
+      String imageName = musicController.currentSong['name'] + ".jpg";
+      initializeDownloadDirectory();
+      listDownloadedFiles();
+      downloadFile(songUrl, songName, imageUrl, imageName);
+      musicController.downloads.assignAll(SongFiles);
+      musicController.images.assignAll(ImagesFiles);
+
+    } 
+    // else {
+    //   setState(() {
+    //     permissionGranted = false;
+    //   });
+    // }
+  }
+
+  Future<void> initializeDownloadDirectory() async {
+    try {
+      if(Platform.isIOS) {
+        downloadDirectory = await getApplicationDocumentsDirectory();
+      } else {
+        downloadDirectory = await getExternalStorageDirectory();
+      }
+
+      if (downloadDirectory != null) {
+        // Create songs and images directories
+        songsDirectory = Directory('${downloadDirectory!.path}/songs');
+        imagesDirectory = Directory('${downloadDirectory!.path}/images');
+
+        if (!await songsDirectory!.exists()) {
+          await songsDirectory!.create(recursive: true);
+        }
+        if (!await imagesDirectory!.exists()) {
+          await imagesDirectory!.create(recursive: true);
+        }
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> listDownloadedFiles() async {
+    if (downloadDirectory != null) {
+      final songFiles = songsDirectory!.listSync(recursive: true);
+      final imageFiles = imagesDirectory!.listSync(recursive: true);
+      setState(() {
+        SongFiles = songFiles;
+        ImagesFiles = imageFiles;
+      });
+    }
+  }
+
+  Future<void> downloadFile(String songUrl, String songName, String imageUrl, String imageName) async {
+  // if (!permissionGranted) {
+  //   await checkPermission();
+  // }
+  if (downloadDirectory != null) {
+    try {
+      final songDownloadPath = '${downloadDirectory!.path}/songs';
+      final imageDownloadPath = '${downloadDirectory!.path}/images';
+
+      final taskID = await FlutterDownloader.enqueue(
+        url: songUrl,
+        fileName: songName,
+        savedDir: songDownloadPath,
+        showNotification: true,
+        openFileFromNotification: true,
+      );
+
+      final taskID2 = await FlutterDownloader.enqueue(
+        url: imageUrl,
+        fileName: imageName,
+        savedDir: imageDownloadPath,
+        showNotification: false,
+        openFileFromNotification: false,
+      );
+
+      Get.snackbar(
+        "Download Complete", 
+        "Your song has been downloaded",
+        snackPosition: SnackPosition.BOTTOM,
+        duration: Duration(seconds: 2),
+        backgroundColor: CustomColors.secondaryColor,
+        colorText: Colors.white, 
+        );
+
+      // initializeDownloadDirectory();
+      // listDownloadedFiles();
+    } catch (e) {
+      print('Download failed: $e');
+    }
+  }
+}
+
+  void showFriendsDialog(BuildContext context) {
+  List<dynamic> selectedFriends = [];
+
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return StatefulBuilder(
+        builder: (BuildContext context, StateSetter setState) {
+          return AlertDialog(
+            title: Text(
+              "Share With",
+              style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 22),
+            ),
+            backgroundColor: CustomColors.secondaryColor,
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  height: 200,
+                  width: 300,
+                  child: ListView(
+                    children: userController.friendsList.map((friend) {
+                      return ListTile(
+                        onTap: () {
+                          setState(() {
+                            if (selectedFriends.contains(friend)) {
+                              selectedFriends.remove(friend);
+                            } else {
+                              selectedFriends.add(friend);
+                            }
+                          });
+                        },
+                        title: Text(
+                          friend['username'],
+                          style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 15),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(friend['photoURL']),
+                          radius: 30,
+                        ),
+                        trailing: Checkbox(
+                          value: selectedFriends.contains(friend),
+                          onChanged: (bool? value) {
+                            setState(() {
+                              if (value == true) {
+                                selectedFriends.add(friend);
+                              } else {
+                                selectedFriends.remove(friend);
+                              }
+                            });
+                          },
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    for(Map<String,dynamic> friend in selectedFriends){
+                      userController.sendSong(friend['username']);
+                    }
+                    Navigator.of(context).pop(); // Close the dialog
+                  },
+                  child: Text("Send"),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    },
+  );
+}
+
+  // void showLyrics(BuildContext context){
+  //   final ItemScrollController itemScrollController = ItemScrollController();
+  //   final ScrollOffsetController scrollOffsetController = ScrollOffsetController();
+  //   final ItemPositionsListener itemPositionsListener = ItemPositionsListener.create();
+  //   final ScrollOffsetListener scrollOffsetListener = ScrollOffsetListener.create();
+
+  //   ScrollablePositionedList.builder(
+  //     itemCount: musicController.lyrics!.length,
+  //     itemBuilder: (context, index) => Text(musicController.lyrics![index].words),
+  //     itemScrollController: itemScrollController,
+  //     scrollOffsetController: scrollOffsetController,
+  //     itemPositionsListener: itemPositionsListener,
+  //     scrollOffsetListener: scrollOffsetListener,
+  //   );
+  // }
 
    void showPlaylistDialog(BuildContext context) {
     showDialog(
@@ -83,7 +316,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
         backgroundColor: CustomColors.backgroundColor,
         leading: IconButton(
           onPressed: (){
-            Get.offNamed('/home');
+            Get.back(closeOverlays: true);
           },
           icon: Icon(Icons.arrow_back_ios,color: Colors.white,),
         ),
@@ -92,6 +325,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
         actions: [
           IconButton(
             onPressed: (){
+              if(!musicController.fromDownloads){
               if(liked){
                 musicController.removeFromPlaylist(0, musicController.currentSong.value);
                 setState(() {
@@ -103,6 +337,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                   liked = true;
                 });
               }
+            }
             },
           icon: Icon(liked?CupertinoIcons.heart_fill:CupertinoIcons.heart, color: Colors.white,)
           ),
@@ -114,8 +349,8 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
             height: 25,
             margin: EdgeInsets.only(top: 15, bottom: 10),
             child: Text(
-              "From Playlist Name",
-              style: TextStyle(fontFamily: 'Harmattan',color: Colors.white,fontSize: 18),
+              "From ${musicController.playlistName}",
+              style: TextStyle(fontFamily: 'Harmattan',color: TextColors.SecondaryTextColor,fontSize: 18),
               overflow: TextOverflow.ellipsis,
               ),
           ),
@@ -123,26 +358,37 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
               margin: EdgeInsets.only(top: 15,left: 15,right: 15, bottom: 15),
               elevation: 15,
               color: Colors.black,
-              shadowColor: Color.fromRGBO(114, 54, 239, 1.0),
+              // shadowColor: Color.fromRGBO(114, 54, 239, 1.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.network(musicController.currentSong['album']['images'][0]['url'],)
-              ),
+                child: musicController.fromDownloads
+                ? Image.file(File(musicController.currentImage))
+                : Image.network(musicController.currentSong['album']['images'][0]['url'],)
+              )
             ),
           Container(
             margin: EdgeInsets.only(top: 10, bottom: 10, left: 20, right: 20),
             child: Column(
               children: [
                 Text(
-                  musicController.currentSong['name'],
+                  musicController.fromDownloads
+                  ? musicController.currentDownload.split('.').first.toString()
+                  : musicController.currentSong['name'],
                   style: TextStyle(fontFamily: 'Harmattan',color: TextColors.PrimaryTextColor,fontSize: 22),
                   overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  musicController.currentSong['artists'][0]['name'],
+                GestureDetector(
+                onTap: () {
+                  musicController.getArtistSongs(musicController.currentSong['artists'][0]['id'], musicController.currentSong['artists'][0]['name'],null);
+                },
+                child: Text(
+                  musicController.fromDownloads
+                  ? musicController.currentDownload.split('.').last.toString()
+                  : musicController.currentSong['artists'][0]['name'],
                   style: TextStyle(fontFamily: 'Harmattan',color: TextColors.SecondaryTextColor,fontSize: 18),
                   overflow: TextOverflow.ellipsis,
                 )
+                ),
               ],
             ),
           ),
@@ -195,13 +441,17 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
               children: [
                 IconButton(
                   onPressed: (){
-
+                    showFriendsDialog(context);
                   },
                   icon: Icon(Icons.share, color: Colors.white,size: 25,),
                 ),
                 IconButton(
                   onPressed: (){
-
+                    musicController.currentSong=<String,dynamic>{}.obs;
+                    playPreviousTrack();
+                    musicController.pauseSong();
+                    musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
+                    musicController.addToRecentlyPlayed(musicController.currentSong);
                   },
                   icon: Icon(CupertinoIcons.backward_end_fill, color: Colors.white,size: 25,),
 
@@ -228,13 +478,18 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                 ),
                 IconButton(
                   onPressed: (){
-
+                    musicController.currentSong=<String,dynamic>{}.obs;
+                    playNextTrack();
+                    musicController.pauseSong();
+                    musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
+                    musicController.addToRecentlyPlayed(musicController.currentSong);
                   },
                   icon: Icon(CupertinoIcons.forward_end_fill ,color: Colors.white,size: 25,),
 
                 ),
                 IconButton(
                   onPressed: (){
+                    userController.getRequestsList();
                     showPlaylistDialog(context);
                   },
                   icon: Icon(Icons.add_circle, color: Colors.white,size: 25,),
@@ -243,15 +498,29 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
               ],
             ),
           ),
-           ElevatedButton(
+          Row(
+          children: [
+            Container(
+            padding: EdgeInsets.only(left: 140, right: 80),
+            child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: CustomColors.primaryColor,
             ),
             onPressed: (){
-                            
+              Get.toNamed('/lyrics');         
             },
             child: const Text("View Lyrics",style: TextStyle(fontSize: 20,color: TextColors.PrimaryTextColor, fontWeight: FontWeight.w400),)
             ),
+            ),
+            IconButton(
+              onPressed: (){
+                musicController.setUrl(musicController.currentSong['name']);
+                checkPermission();
+              }, 
+              icon: Icon(Icons.download, color: Colors.white, size: 25,)
+            )
+          ]
+          ),
         ],
       ),
     ),
