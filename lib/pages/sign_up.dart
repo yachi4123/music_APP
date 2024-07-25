@@ -40,7 +40,7 @@ class _SignUpState extends State<SignUpPage> {
                       child: Container(
                       height: 200,
                       width: 175,
-                      child: Image.asset('assets/images/logo.jpg'),
+                      child: Image.asset('assets/icon/app_icon.png'),
                     ),
                   ),
                 ),

@@ -8,6 +8,9 @@ import 'package:just_audio/just_audio.dart';
 import 'package:jiosaavn/jiosaavn.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import 'dart:async';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:app1/services/media_notification_service.dart';
+import 'package:app1/services/audio.dart';
 
 class Lyric{
   final String words;
@@ -26,6 +29,7 @@ class MusicController extends GetxController {
   var myPlaylists = <dynamic>[].obs;
   var currentPlaylist = <dynamic>[].obs;
   var recommendedTracks = <dynamic>[].obs;
+  var top50 = <dynamic>[].obs;
   var currentSong = <String, dynamic>{}.obs; 
   var downloads = <dynamic>[].obs;
   var images =<dynamic>[].obs;
@@ -66,15 +70,60 @@ class MusicController extends GetxController {
 
   final String clientId = 'd40584fc8ebe43ebb91e2fd5ed7509c5';
   final String clientSecret = '0ded2e036a424fb0a7c4645bdccb803c';
-
   final AudioPlayer audioPlayer = AudioPlayer();
+  var playlist;
 
   @override
   void onInit() {
     super.onInit();
     search('');
     fetchRecentlyPlayedSongs();
+    getRecommendedArtists();
     fetchPlaylists();
+  }
+
+  Future<void> setPlaylist() async {
+    // playlist=ConcatenatingAudioSource(children: []);
+    List<AudioSource> songs=[];
+    for(var song in currentPlaylist){
+      final yt = YoutubeExplode();
+      final result = await yt.search.search(song['name']+song['artists'][0]['name']+"official audio");
+      final videoId = result.first.id.value;
+      var manifest = await yt.videos.streamsClient.getManifest(videoId);
+      var audioUrl = manifest.audioOnly.first.url;
+
+      var mediaItem = MediaItem(
+        id: song['id'],
+        title: song['name'],
+        artUri: Uri.parse(song['album']['images'][0]['url']),
+        artist: song['artists'][0]['name'],
+      );
+      songs.add(AudioSource.uri(
+        Uri.parse(audioUrl.toString()),
+        tag: mediaItem,
+      ));
+    }
+    playlist = ConcatenatingAudioSource(children: songs);
+  }
+
+  Future<void> getTop50() async {
+    final String token = await _getAccessToken();
+    const playlistId = "37i9dQZEVXbLZ52XmnySJg";
+    const String apiUrl = 'https://api.spotify.com/v1/playlists/$playlistId/tracks';
+    final response = await http.get(
+      Uri.parse(apiUrl),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (response.statusCode == 200) {
+      final Map<String, dynamic> jsonResponse = json.decode(response.body);
+      final List<dynamic> tracks = jsonResponse['items'];
+      top50.assignAll(tracks);
+      print(top50);
+    } else {
+      throw Exception('Failed to fetch trending songs');
+    }
   }
   
   Future<void> fetchTopSongsForGenre(String genre) async {
@@ -211,9 +260,20 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
     }
   }
 
-
   Future<void> playFromFile(String filePath) async{
-    await audioPlayer.setFilePath(filePath);
+    if (filePath.toString() != "") {
+    var mediaItem = MediaItem(
+      id: filePath.split('/').last.split('.').first.toString(),
+      title: filePath.split('/').last.split('.').first.toString(),
+      // artUri: Uri.parse(currentSong['album']['images'][0]['url']),
+      artist: filePath.split('/').last.split('.').last.toString(),
+    );
+    await audioPlayer.setAudioSource(AudioSource.uri(
+      Uri.file(filePath),
+      tag: mediaItem,
+    ));
+    }
+    audioPlayer.setFilePath(filePath);
     fromDownloads = true;
     isPlaying.value = true;
     audioPlayer.play();
@@ -233,12 +293,28 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
     final videoId = result.first.id.value;
     var manifest = await yt.videos.streamsClient.getManifest(videoId);
     var audioUrl = manifest.audioOnly.first.url;
-    if(audioUrl.toString() != ""){
-        await audioPlayer.setUrl(audioUrl.toString());
-        audioPlayer.play();
-        isPlaying.value = true;
-        fromDownloads = false;
-      }
+    // if(audioUrl.toString() != ""){
+    //     await audioPlayer.setUrl(audioUrl.toString());
+    //     audioPlayer.play();
+    //     isPlaying.value = true;
+    //     fromDownloads = false;
+    //   }
+    if (audioUrl.toString() != "") {
+    var mediaItem = MediaItem(
+      id: currentSong['id'],
+      title: currentSong['name'],
+      artUri: Uri.parse(currentSong['album']['images'][0]['url']),
+      artist: currentSong['artists'][0]['name'],
+    );
+    await audioPlayer.setAudioSource(AudioSource.uri(
+      Uri.parse(audioUrl.toString()),
+      tag: mediaItem,
+    ));
+
+    audioPlayer.play();
+    isPlaying.value = true;
+    fromDownloads = false;
+    }
   }
 
   Future<void> setUrl(String trackName) async{
@@ -263,7 +339,22 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
     audioPlayer.seek(Duration(milliseconds: value.toInt()));
   }
 
+  Future<void> playNextTrack() async{
+      currentSongIndex >=currentPlaylist.length-1
+      ?currentSongIndex = 0
+      :currentSongIndex = currentSongIndex + 1;
+      currentSong.value = currentPlaylist[currentSongIndex];
+  }
+
+  Future<void> playPreviousTrack() async{
+      currentSongIndex == 0
+      ?currentSongIndex = currentPlaylist.length-1
+      :currentSongIndex = currentSongIndex - 1;
+      currentSong.value = currentPlaylist[currentSongIndex];
+  }
+
   Future<void> getRecommendations(String id) async {
+    recommendedTracks.clear();
     final url = Uri.parse('https://api.spotify.com/v1/recommendations?seed_tracks=$id');
     final String token = await _getAccessToken();
     final response = await http.get(url, headers: {
@@ -272,13 +363,13 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       recommendedTracks.assignAll(data['tracks']);
+      recommendedTracks.insert(0,currentSong);
     } else {
       throw Exception('Failed to load recommendations');
     }
   }
 
   Future<void> getRecommendedArtists() async {
-    fetchRecentlyPlayedSongs();
     final String token = await _getAccessToken();
     List<String> seedArtists = [];
       for (var item in recentlyPlayed) {
@@ -349,7 +440,7 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
       final data = json.decode(response.body);
       if (data['tracks'] != null) {
         for(var item in data['tracks']){
-          var map = <String,String>{};
+          
           // map['id']=item['id'];
           // map['name']=item['name'];
           // map['image']=item['album']['images'][0]['url'];

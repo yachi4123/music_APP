@@ -73,8 +73,11 @@ class _MyPlaylistsState extends State<UserPlaylists> {
                           var playlist = userController.userPlaylists[index];
                           return ListTile(
                             onTap: () {
+                              musicController.currentPlaylist.clear();
                               if (playlist['songs'] != null){
-                                musicController.currentPlaylist.assignAll(playlist['songs']);
+                                for(var song in playlist['songs']){
+                                  musicController.currentPlaylist.add(song);
+                                }
                                 musicController.currentPlaylistName = playlist['name'];
                               }
                               Get.toNamed('/playlist');

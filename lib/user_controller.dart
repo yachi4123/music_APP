@@ -251,6 +251,7 @@ class UserController extends GetxController {
   }
 
   Future<void> getSharedList(String username) async{
+    sharedList.clear();
     final user = FirebaseAuth.instance.currentUser;
     final myDoc = FirebaseFirestore.instance.collection('users').doc(user?.uid);
     final myData = await myDoc.get();

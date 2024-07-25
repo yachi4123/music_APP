@@ -184,7 +184,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        Icon(Icons.share,size:30, color: TextColors.PrimaryTextColor,),
+                        Icon(Icons.share,size:25, color: TextColors.PrimaryTextColor,),
                         Text("Shared Songs", style: TextStyle(fontSize: 18, color: TextColors.PrimaryTextColor),),
                         SizedBox(
                           width: 90,

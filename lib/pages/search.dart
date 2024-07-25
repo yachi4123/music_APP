@@ -206,6 +206,7 @@ class _SearchWidgetState extends State<SearchWidget> {
           return ListTile(
             onTap: () {
               userController.currentDisplayUser.assignAll(user);
+              userController.getFriendStatus(user['username']);
               Get.toNamed('user_profile');
             },
             contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 7),
@@ -238,13 +239,20 @@ class _SearchWidgetState extends State<SearchWidget> {
           var song = musicController.searchResults[index];
           return ListTile(
             onTap: () {
+              setState(() {
               musicController.currentSong.value = song;
               musicController.searchAndPlayTrack(song['name']+" "+song['artists'][0]['name']);
               musicController.addToRecentlyPlayed(song);
               musicController.playlistName = "Search";
               musicController.getRecommendations(song['id']);
               musicController.currentPlaylist=musicController.recommendedTracks;
-              musicController.currentSongIndex=-1;
+              musicController.currentSongIndex=0;
+              });
+              // musicController.setPlaylist();
+              // musicController.audioPlayer.setAudioSource(musicController.playlist, preload: true);
+              // musicController.audioPlayer.play();
+              // musicController.isPlaying.value=true;
+              // musicController.fromDownloads=false;
             },
             leading: Image.network(song['album']['images'][0]['url'], height: 55, width: 55, fit: BoxFit.cover),
             title: Text(

@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'package:app1/user_controller.dart';
 import 'package:app1/widgets/navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,6 +21,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
     final AuthController authController = Get.find();
     final MusicController musicController = Get.find<MusicController>();
+    final UserController userController = Get.find<UserController>();
     final user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -29,7 +30,9 @@ class _HomePageState extends State<HomePage> {
     profileURL = user?.photoURL?? userProfileURL;
     musicController.fetchRecentlyPlayedSongs();
     musicController.getRecommendedArtists();
+    musicController.top50;
     GlobalVariable.instance.myGlobalVariable = 0;
+    userController.getRequestsList();
     super.initState();
   }
 
@@ -179,7 +182,12 @@ class _HomePageState extends State<HomePage> {
               children: musicController.recentlyPlayed.map((song)=>
                   ListTile(
                     onTap: (){
+                      musicController.currentPlaylist=musicController.recentlyPlayed;
+                      musicController.currentPlaylistName="Recently Played";
+                      // musicController.setPlaylist();
                       musicController.currentSong.value = song;
+                      // musicController.audioPlayer.setAudioSource(musicController.playlist,preload: false);
+                      // musicController.audioPlayer.play();
                       musicController.searchAndPlayTrack(song['name']+" "+song['artists'][0]['name']);
                       musicController.addToRecentlyPlayed(song);
                     },

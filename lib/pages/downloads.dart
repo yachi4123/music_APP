@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'package:app1/download_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/Cupertino.dart';
 import 'package:app1/constants/style.dart';
 import 'package:app1/music_controller.dart';
 import 'package:get/get.dart';
@@ -10,7 +9,6 @@ import 'package:app1/widgets/navbar.dart';
 import 'package:app1/pages/audio_player.dart';
 import 'package:app1/widgets/bottom_bar.dart';
 import 'package:app1/user_data.dart';
-import 'package:app1/assets/images.dart';
 
 
 class DownloadsPage extends StatefulWidget {

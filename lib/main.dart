@@ -4,7 +4,9 @@ import 'package:app1/pages/genre.dart';
 import 'package:app1/pages/lyrics.dart';
 import 'package:app1/pages/my_playlists.dart';
 import 'package:app1/pages/shared.dart';
+import 'package:app1/pages/splash.dart';
 import 'package:app1/pages/user_profile.dart';
+import 'package:app1/services/media_notification_service.dart';
 import 'package:app1/widgets/navbar.dart';
 import 'package:app1/music_controller.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +27,15 @@ import 'package:app1/pages/downloads.dart';
 import 'package:app1/user_controller.dart';
 import 'package:app1/pages/user_playlists.dart';
 import 'package:app1/download_controller.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 
-void main() async{
+Future <void> main() async{
+  await JustAudioBackground.init(
+    androidNotificationChannelId: 'com.ryanheise.bg_demo.channel.audio',
+    androidNotificationChannelName: 'Audio playback',
+    androidNotificationOngoing: true,
+  );
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(); 
   await FlutterDownloader.initialize(
@@ -43,11 +51,11 @@ class App extends StatelessWidget {
     Get.put(UserController());
     Get.put(AuthController());
     Get.put(DownloadController());
-    final MusicController musicController = Get.find<MusicController>();
-    final user = FirebaseAuth.instance.currentUser;
+    // final user = FirebaseAuth.instance.currentUser;
     return GetMaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: user!=null ? '/home' : '/login',
+      // initialRoute: user!=null ? '/home' : '/login',
+      initialRoute: '/splash',
       getPages: [
         GetPage(name: '/home', page: () => HomePage()),
         GetPage(name: '/navbar', page: () => Navbar()),
@@ -67,6 +75,7 @@ class App extends StatelessWidget {
         GetPage(name: '/lyrics', page: () => LyricsPage()),
         GetPage(name: '/artist', page: () => ArtistPage()),
         GetPage(name: '/genre', page: () => GenrePage()),
+        GetPage(name: '/splash', page: () => splashScreen()),
       ],
     );
   }

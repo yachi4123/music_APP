@@ -82,9 +82,11 @@ class _MyPlaylistsState extends State<MyPlaylists> {
                       children: musicController.myPlaylists.map((playlist)=>
                           ListTile(
                             onTap: () {
+                              musicController.currentPlaylist=[].obs;
                               if (playlist['songs'] != null){
-                                musicController.fetchPlaylists();
-                                musicController.currentPlaylist.assignAll(playlist['songs']);
+                                for(var song in playlist['songs']){
+                                  musicController.currentPlaylist.add(song);
+                                }
                                 musicController.currentPlaylistName = playlist['name'];
                               }
                               Get.toNamed('/playlist');

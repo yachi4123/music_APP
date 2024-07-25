@@ -12,7 +12,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:just_audio_background/just_audio_background.dart';
+import 'package:app1/services/media_notification_service.dart';
 
 class AudioPlayerPage extends StatefulWidget {
   const AudioPlayerPage({super.key});
@@ -45,7 +46,6 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
   }
 
   Future<void> playNextTrack() async{
-      print(musicController.currentSongIndex);
       setState(() {  
       musicController.currentSongIndex >=musicController.currentPlaylist.length-1
       ?musicController.currentSongIndex = 0
@@ -203,6 +203,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                   child: ListView(
                     children: userController.friendsList.map((friend) {
                       return ListTile(
+                        contentPadding: EdgeInsets.only(top: 5, bottom: 5),
                         onTap: () {
                           setState(() {
                             if (selectedFriends.contains(friend)) {
@@ -448,10 +449,12 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                 IconButton(
                   onPressed: (){
                     musicController.currentSong=<String,dynamic>{}.obs;
-                    playPreviousTrack();
-                    musicController.pauseSong();
-                    musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
-                    musicController.addToRecentlyPlayed(musicController.currentSong);
+                    setState(() {
+                      musicController.playPreviousTrack();
+                      musicController.pauseSong();
+                      musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
+                      musicController.addToRecentlyPlayed(musicController.currentSong);
+                    });
                   },
                   icon: Icon(CupertinoIcons.backward_end_fill, color: Colors.white,size: 25,),
 
@@ -479,10 +482,12 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
                 IconButton(
                   onPressed: (){
                     musicController.currentSong=<String,dynamic>{}.obs;
-                    playNextTrack();
-                    musicController.pauseSong();
-                    musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
-                    musicController.addToRecentlyPlayed(musicController.currentSong);
+                    setState(() {
+                      musicController.playNextTrack();
+                      musicController.pauseSong();
+                      musicController.searchAndPlayTrack(musicController.currentSong['name']+" "+musicController.currentSong['artists'][0]['name']);
+                      musicController.addToRecentlyPlayed(musicController.currentSong);
+                    });
                   },
                   icon: Icon(CupertinoIcons.forward_end_fill ,color: Colors.white,size: 25,),
 

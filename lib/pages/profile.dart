@@ -9,7 +9,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:app1/assets/images.dart';
 import 'package:app1/widgets/bottom_bar.dart';
 import 'package:app1/music_controller.dart';
-import 'dart:io';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -29,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
     GlobalVariable.instance.myGlobalVariable = 3;
     username = user?.displayName??"user";
     profileURL = user?.photoURL??userProfileURL;
+    userController.getRequestsList();
     super.initState();
   }
 

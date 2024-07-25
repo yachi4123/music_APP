@@ -1,14 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/Cupertino.dart';
-import 'package:app1/constants/style.dart';
-import 'package:app1/auth.dart';
 import 'package:app1/music_controller.dart';
 import 'package:get/get.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:app1/widgets/navbar.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:flutter_downloader/flutter_downloader.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 
 class DownloadController extends GetxController {

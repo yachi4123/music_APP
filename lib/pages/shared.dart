@@ -26,7 +26,7 @@ class _SharedPageState extends State<SharedPage> {
   @override
   void initState() {
     GlobalVariable.instance.myGlobalVariable = 3;
-    userController.getSharedList(userController.currentDisplayUser['username']);
+    // userController.getSharedList(userController.currentDisplayUser['username']);
     super.initState();
   }
   @override
