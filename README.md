@@ -59,14 +59,3 @@ Before you begin, ensure you have met the following requirements:
     flutter run
     ```
 
-### Build for Release
-
-To build the app for release on Android or iOS, follow the official Flutter documentation for [building and releasing an Android app](https://flutter.dev/docs/deployment/android) or [building and releasing an iOS app](https://flutter.dev/docs/deployment/ios).
-
-## Contributing
-
-Contributions are always welcome! Please read the [contribution guidelines](CONTRIBUTING.md) first.
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
