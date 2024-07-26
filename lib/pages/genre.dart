@@ -139,6 +139,8 @@ class _GenrePageState extends State<GenrePage> {
                               musicController.currentSong.value = song;
                               musicController.searchAndPlayTrack(song['name'] + " " + song['artists'][0]['name']);
                               musicController.addToRecentlyPlayed(song);
+                              musicController.currentPlaylist = musicController.topSongsForGenre;
+                              musicController.currentPlaylistName = "Top ${musicController.currentGenre} Tracks";
                               musicController.playlistName = musicController.currentPlaylistName;
                               musicController.currentSongIndex = index; 
                             },

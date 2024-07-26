@@ -1,4 +1,5 @@
 import 'package:app1/pages/artist.dart';
+import 'package:app1/pages/forgetpass.dart';
 import 'package:app1/pages/friends.dart';
 import 'package:app1/pages/genre.dart';
 import 'package:app1/pages/lyrics.dart';
@@ -76,6 +77,7 @@ class App extends StatelessWidget {
         GetPage(name: '/artist', page: () => ArtistPage()),
         GetPage(name: '/genre', page: () => GenrePage()),
         GetPage(name: '/splash', page: () => splashScreen()),
+        GetPage(name: '/forgetpass', page: () => forgetpass()),
       ],
     );
   }

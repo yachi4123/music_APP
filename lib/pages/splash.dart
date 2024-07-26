@@ -6,6 +6,7 @@ import 'package:app1/pages/login.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get/get.dart';
 import 'package:app1/auth.dart';
+import 'package:app1/music_controller.dart';
 
 class splashScreen extends StatefulWidget{
   @override
@@ -15,11 +16,15 @@ class splashScreen extends StatefulWidget{
 class _splashScreenState extends State<splashScreen>
 with SingleTickerProviderStateMixin{
   final AuthController authController = Get.find();
+  final MusicController musicController = Get.find();
   late Animation animation;
   late AnimationController animationController;
   @override
   void initState() {
     super.initState();
+    musicController.getMadePlaylists();
+    musicController.getSongs();
+    musicController.getRecommendedArtists();
     Timer(Duration(milliseconds:1500),(){
       final user = FirebaseAuth.instance.currentUser;
       if(authController.currentUser.value==null){

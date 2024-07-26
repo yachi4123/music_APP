@@ -69,14 +69,16 @@ class _ArtistPageState extends State<ArtistPage> {
                 return SizedBox.shrink();
               }
               return ListView.builder(
-                itemCount: musicController.currentPlaylist.length,
+                itemCount: musicController.artistSongs.length,
                 itemBuilder: (context, index) {
-                  final song = musicController.currentPlaylist[index];
+                  final song = musicController.artistSongs[index];
                   return ListTile(
                     onTap: () {
                       musicController.currentSong.value = song;
                       musicController.searchAndPlayTrack(song['name'] + " " + song['artists'][0]['name']);
                       musicController.addToRecentlyPlayed(song);
+                      musicController.currentPlaylist = musicController.artistSongs;
+                      musicController.currentPlaylistName = "${musicController.currentArtist['name']}";
                       musicController.playlistName = musicController.currentPlaylistName;
                       musicController.currentSongIndex = index; // Set the current song index
                     },

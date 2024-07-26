@@ -1,3 +1,4 @@
+import 'package:app1/constants/style.dart';
 import 'package:get/get.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -31,7 +32,10 @@ class AuthController extends GetxController {
       Get.offNamed('/home');
     } catch (e) {
       Get.snackbar('Sign In Error', e.toString(),
-          snackPosition: SnackPosition.BOTTOM);
+          snackPosition: SnackPosition.BOTTOM,
+          backgroundColor: CustomColors.secondaryColor,
+          colorText: TextColors.PrimaryTextColor,
+      );
     }
   }
 
@@ -55,7 +59,11 @@ class AuthController extends GetxController {
         Get.offNamed('/edit_profile'); // Redirect to profile setup page
       }
     } catch (e) {
-      Get.snackbar('Sign Up Error', e.toString(), snackPosition: SnackPosition.BOTTOM);
+      Get.snackbar('Sign Up Error', e.toString(), 
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: CustomColors.secondaryColor,
+        colorText: TextColors.PrimaryTextColor
+      );
     }
   }
 

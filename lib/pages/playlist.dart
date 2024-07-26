@@ -61,7 +61,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                       overflow: TextOverflow.ellipsis,
                       ),
                       Container(
-                      width: 160,
+                      width: 100,
                       padding: EdgeInsets.only(left: 130),
                       )
                     ]
@@ -109,8 +109,11 @@ class _PlaylistPageState extends State<PlaylistPage> {
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   IconButton(
-                                    onPressed: () {},
-                                    icon: Icon(Icons.more_vert, size: 30, color: Colors.white),
+                                    onPressed: () {
+                                      musicController.removeFromPlaylist(musicController.currentPlaylistIndex, song);
+                                      musicController.fetchPlaylists();
+                                    },
+                                    icon: Icon(Icons.delete, size: 20, color: Colors.white),
                                   ),
                                 ],
                               ),
@@ -121,7 +124,7 @@ class _PlaylistPageState extends State<PlaylistPage> {
                     }),
                   )
                   ]
-                  ),
+                ),
               ),
             Positioned(
               bottom: 0,

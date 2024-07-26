@@ -78,10 +78,13 @@ class _MyPlaylistsState extends State<MyPlaylists> {
                   ),
                     Expanded(
                     child: Obx(() {
-                      return ListView(
-                      children: musicController.myPlaylists.map((playlist)=>
-                          ListTile(
+                      return ListView.builder(
+                        itemCount: musicController.myPlaylists.length,
+                        itemBuilder: (context, index) {
+                        var playlist = musicController.myPlaylists[index];
+                          return ListTile(
                             onTap: () {
+                              musicController.currentPlaylistIndex=index;
                               musicController.currentPlaylist=[].obs;
                               if (playlist['songs'] != null){
                                 for(var song in playlist['songs']){
@@ -122,8 +125,8 @@ class _MyPlaylistsState extends State<MyPlaylists> {
                                 ],
                               ),
                             )
-                          )
-                      ).toList()
+                          );
+                        }
                       );
                     }),
                   ),

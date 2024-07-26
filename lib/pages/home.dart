@@ -30,7 +30,8 @@ class _HomePageState extends State<HomePage> {
     profileURL = user?.photoURL?? userProfileURL;
     musicController.fetchRecentlyPlayedSongs();
     musicController.getRecommendedArtists();
-    musicController.top50;
+    musicController.getMadePlaylists();
+    musicController.getSongs();
     GlobalVariable.instance.myGlobalVariable = 0;
     userController.getRequestsList();
     super.initState();
@@ -156,7 +157,7 @@ class _HomePageState extends State<HomePage> {
             }
           return Column(  
           children: [
-            Container(
+          Container(
             height: 45,
             margin: EdgeInsets.only(top:15,left: 15,right: 15),
             child: Row(
@@ -177,7 +178,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             height: 215,
-            margin: EdgeInsets.only(top: 10),
+            margin: EdgeInsets.only(top: 5,bottom: 10),
             child: ListView(
               children: musicController.recentlyPlayed.map((song)=>
                   ListTile(
@@ -202,22 +203,6 @@ class _HomePageState extends State<HomePage> {
                     ),
                     title: Text(song['name'], style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 16), overflow: TextOverflow.ellipsis,),
                     subtitle: Text(song['artists'][0]['name'], style: TextStyle(color: TextColors.SecondaryTextColor, fontSize: 12)),
-                    trailing:Container(
-                      padding: EdgeInsets.only(left: 40),
-                      height: 55,
-                      width: 100,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            onPressed: (){
-
-                            },
-                            icon: Icon(Icons.more_vert,size: 30,color: Colors.white,),
-                          ),
-                        ],
-                      ),
-                    )
                   )
               ).toList()
             ),
@@ -281,7 +266,7 @@ class _HomePageState extends State<HomePage> {
           ),
           Container(
             height: 120,
-            margin: EdgeInsets.only(left: 15,right: 15),
+            margin: EdgeInsets.only(left: 15,right: 15, bottom: 10),
             child: ListView(
               scrollDirection: Axis.horizontal,
               children:musicController.genres.map((value)=>
@@ -318,115 +303,103 @@ class _HomePageState extends State<HomePage> {
                 ).toList()
             ),
           ),
-        Container(
-            height: 45,
-            margin: EdgeInsets.only(top: 20,left: 15,right: 15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Discover Artists",style: TextStyle(fontFamily: 'Harmattan',fontSize: 25,color: TextColors.PrimaryTextColor ),),
-                // InkWell(child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 20,color: Colors.grey),))
-              ],
-            ),
-          ),
-          Container(
-            height: 180,
-            margin: EdgeInsets.only(left: 15,right: 15),
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-                  children:musicController.artists.map((artist)=>
-                      Container(
-                        height: 180,
-                        width: 150,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(artist['images'][0]['url']),
-                              radius: 60,
-                            ),
-                            Container(
-                            padding: EdgeInsets.only(top:10),
-                            child: Text(artist['name'], style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
-                            )
-                          ],
-                        ),
-                      ),
-            ).toList()
-            ),
-          ),
           Container(
             height: 45,
             margin: EdgeInsets.only(top: 20,left: 15,right: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Discover Artists",style: TextStyle(fontFamily: 'Harmattan',fontSize: 25,color: TextColors.PrimaryTextColor ),),
+                Text("Playlists For You",style: TextStyle(fontFamily: 'Harmattan',fontSize: 25,color: TextColors.PrimaryTextColor ),),
                 // InkWell(child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 20,color: Colors.grey),))
               ],
             ),
           ),
           Container(
-            height: 180,
-            margin: EdgeInsets.only(left: 15,right: 15),
-            child: ListView(
+            height: 200,
+            margin: EdgeInsets.only(left: 15, right: 15, bottom: 15),
+            child: ListView.builder(
               scrollDirection: Axis.horizontal,
-                  children:musicController.artists.map((artist)=>
-                      Container(
-                        height: 180,
-                        width: 150,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(artist['images'][0]['url']),
-                              radius: 60,
-                            ),
-                            Container(
-                            padding: EdgeInsets.only(top:10),
-                            child: Text(artist['name'], style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
-                            )
-                          ],
+              itemCount: 7,
+              itemBuilder: (context, index) {
+                var value = musicController.madePlaylists[index];
+                var name = musicController.madePlaylistNames[index];
+                return GestureDetector(
+                  onTap: () {
+                    musicController.currentPlaylist = value;
+                    musicController.currentPlaylistName = name;
+                    Get.toNamed('/playlist');
+                  },
+                  child: Container(
+                    height: 160,
+                    width: 160,
+                    margin: EdgeInsets.symmetric(horizontal: 5), // Add margin if needed
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          height: 150,
+                          width: 150,
+                          child: Image.network(value[0]['album']['images'][0]['url']),
                         ),
-                      ),
-            ).toList()
+                        Container(
+                          padding: EdgeInsets.only(top: 10),
+                          child: Text(name, style: TextStyle(color: TextColors.PrimaryTextColor, fontWeight: FontWeight.w300, fontSize: 18),overflow: TextOverflow.ellipsis,),
+                        )
+                      ],
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           Container(
             height: 45,
-            margin: EdgeInsets.only(top: 20,left: 15,right: 15),
+            margin: EdgeInsets.only(top:15,left: 15,right: 15),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Discover Artists",style: TextStyle(fontFamily: 'Harmattan',fontSize: 25,color: TextColors.PrimaryTextColor ),),
-                // InkWell(child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 20,color: Colors.grey),))
+                Text("Songs you might like",style: TextStyle(fontFamily: 'Harmattan',fontSize:25, color: TextColors.PrimaryTextColor),),
+                InkWell(
+                  onTap: (){
+                    musicController.currentPlaylist = musicController.songs;
+                    musicController.currentPlaylistName = "Songs you might like";
+                    Get.toNamed('/playlist');
+                  },
+                  child: Text("See All >",style: TextStyle(fontFamily: 'Harmattan',fontSize: 15,color: Colors.grey),
+                  ),
+                )
               ],
             ),
           ),
           Container(
-            height: 180,
-            margin: EdgeInsets.only(left: 15,right: 15),
+            height: 400,
+            margin: EdgeInsets.only(top: 5,bottom: 10),
             child: ListView(
-              scrollDirection: Axis.horizontal,
-                  children:musicController.artists.map((artist)=>
-                      Container(
-                        height: 180,
-                        width: 150,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            CircleAvatar(
-                              backgroundImage: NetworkImage(artist['images'][0]['url']),
-                              radius: 60,
-                            ),
-                            Container(
-                            padding: EdgeInsets.only(top:10),
-                            child: Text(artist['name'], style: TextStyle(fontFamily: 'Harmattan',fontSize: 18, color: TextColors.PrimaryTextColor),),
-                            )
-                          ],
-                        ),
+              children: musicController.songs.map((song)=>
+                  ListTile(
+                    onTap: (){
+                      musicController.currentPlaylist=musicController.songs;
+                      musicController.currentPlaylistName="Songs You Might Like";
+                      // musicController.setPlaylist();
+                      musicController.currentSong.value = song;
+                      // musicController.audioPlayer.setAudioSource(musicController.playlist,preload: false);
+                      // musicController.audioPlayer.play();
+                      musicController.searchAndPlayTrack(song['name']+" "+song['artists'][0]['name']);
+                      musicController.addToRecentlyPlayed(song);
+                    },
+                    contentPadding: EdgeInsets.only(left: 20, right: 5),
+                    leading: Container(
+                      height:55,
+                      width: 65,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(15),
                       ),
-            ).toList()
+                      child: Image(image: NetworkImage(song['album']['images'][0]['url']))
+                    ),
+                    title: Text(song['name'], style: TextStyle(color: TextColors.PrimaryTextColor, fontSize: 16), overflow: TextOverflow.ellipsis,),
+                    subtitle: Text(song['artists'][0]['name'], style: TextStyle(color: TextColors.SecondaryTextColor, fontSize: 12)),
+                  )
+              ).toList()
             ),
           ),
         ]

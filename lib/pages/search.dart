@@ -239,15 +239,13 @@ class _SearchWidgetState extends State<SearchWidget> {
           var song = musicController.searchResults[index];
           return ListTile(
             onTap: () {
-              setState(() {
               musicController.currentSong.value = song;
               musicController.searchAndPlayTrack(song['name']+" "+song['artists'][0]['name']);
               musicController.addToRecentlyPlayed(song);
-              musicController.playlistName = "Search";
+              musicController.currentPlaylistName = "Search";
               musicController.getRecommendations(song['id']);
               musicController.currentPlaylist=musicController.recommendedTracks;
               musicController.currentSongIndex=0;
-              });
               // musicController.setPlaylist();
               // musicController.audioPlayer.setAudioSource(musicController.playlist, preload: true);
               // musicController.audioPlayer.play();

@@ -33,7 +33,7 @@ dependencies:
   firebase_auth: 
   flutter_bloc:
   equatable: 
-  google_sign_in: 
+  google_sign_in: ^6.2.1
   email_validator:
   provider:
   cloud_firestore:

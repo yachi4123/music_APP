@@ -1,9 +1,11 @@
 import 'package:app1/constants/style.dart';
+import 'package:app1/pages/google.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:app1/auth.dart';
-//import 'package:app1/sign_up.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:app1/pages/sign_up.dart';
 
 bool _isobsecured =true;
 class LoginPage extends StatefulWidget {
@@ -22,7 +24,7 @@ class _LoginPageState extends State<LoginPage> {
     return await Get.dialog<bool>(
       AlertDialog(
         backgroundColor: CustomColors.secondaryColor,
-        content: Text('Are you sure you want to exit?'),
+        content: Text('Are you sure you want to exit?', style: TextStyle(color:TextColors.PrimaryTextColor)),
         actions: [
           TextButton(
             onPressed: () => Get.back(result: false),
@@ -58,56 +60,52 @@ class _LoginPageState extends State<LoginPage> {
               margin: EdgeInsets.only(top: 130),
               alignment: Alignment.center,
               // color: Colors.red,
-              height: 180,
-              child: CircleAvatar(
-                backgroundImage: AssetImage('lib/assets/logo.jpg'),
-                radius: 90,
-                //minRadius: 70
-              ),
+              height: 220,
+              child: Image.asset('assets/icon/app_icon.png',fit:BoxFit.fill),
             ),
             Container(
-              margin: EdgeInsets.only(top: 80,left: 10,right: 10),
+              margin: EdgeInsets.only(top: 80,left: 25,right: 25),
               // color: Colors.blueAccent,
               child: TextFormField(
                 controller: _emailController,
                 style: TextStyle(color: TextColors.PrimaryTextColor,fontSize: 18),
                 decoration: InputDecoration(
-                  prefixIcon: Icon(Icons.mail,size: 27,),
+                  prefixIcon: Icon(Icons.mail,size: 25,),
                   hintText: "Enter your Email",
                   hintStyle: TextStyle(color: TextColors.SecondaryTextColor,fontSize: 18),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: BorderSide(
                         color: TextColors.SecondaryTextColor,
-                        width: 2
+                        width: 1.5
                     ),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),
                     borderSide: BorderSide(
                       color: TextColors.PrimaryTextColor,
-                      width: 2,
+                      width: 1.5,
                     ),
                   ),
                 ),
               ),
             ),
             Container(
-              margin: EdgeInsets.only(top: 30,left: 10,right: 10),
+              margin: EdgeInsets.only(top: 30,left: 25,right: 25),
               // color: Colors.blueAccent,
               child: TextFormField(
                 controller: _passwordController,
                 obscureText: _isobsecured,
                 style: (TextStyle(color: TextColors.PrimaryTextColor,fontSize: 18)),
                 decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock,size: 27,),
+                    prefixIcon: Icon(Icons.lock,size: 25,),
                     suffixIcon: IconButton(
                         onPressed: (){
                           setState(() {
                             _isobsecured=!_isobsecured;
                           });
                         },
-                        icon:_isobsecured ? Icon(Icons.visibility):Icon(Icons.visibility_off)
+                        icon:_isobsecured ? Icon(Icons.visibility_off):Icon(Icons.visibility)
                     ),
                     hintText: "Enter your password",
                     hintStyle: TextStyle(color: TextColors.SecondaryTextColor,fontSize: 18),
@@ -115,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(25),
                         borderSide: BorderSide(
                             color: TextColors.SecondaryTextColor,
-                            width: 2
+                            width: 1.5
                         )
 
                     ),
@@ -123,14 +121,14 @@ class _LoginPageState extends State<LoginPage> {
                         borderRadius: BorderRadius.circular(25),
                         borderSide: BorderSide(
                           color: TextColors.PrimaryTextColor,
-                          width: 2,
+                          width: 1.5,
                         )
                     )
                 ),
               ),
             ),
             Container(
-              margin: EdgeInsets.only(top: 15,right: 10),
+              margin: EdgeInsets.only(top: 15,right: 25),
               alignment: Alignment.centerRight,
               //color:Colors.blueAccent,
               height: 20,
@@ -141,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: Text('Forget password ?',style: TextStyle(color: TextColors.SecondaryTextColor),)),
             ),
             Container(
-                margin: EdgeInsets.only(top: 50,left: 10,right: 10),
+                margin: EdgeInsets.only(top: 50,left: 20,right: 20),
                 height: 50,
                 width: 380,
                 child:ElevatedButton(
@@ -152,27 +150,47 @@ class _LoginPageState extends State<LoginPage> {
                         _passwordController.text.trim(),
                     );
                   },
-                  child: Text('Login',style: TextStyle(color: Colors.white,fontSize: 30),),
+                  child: Text('Login',style: TextStyle(color: Colors.white,fontSize: 22, fontWeight: FontWeight.w400),),
                 )
             ),
+            // Container(
+            //   margin: EdgeInsets.only(top: 50),
+            //  // color: Colors.blueAccent,
+            //   child: Row(
+            //       mainAxisAlignment: MainAxisAlignment.center,
+            //       children: [
+            //         Text('Login with ',style: TextStyle(color: TextColors.SecondaryTextColor,fontSize: 20),),
+            //         InkWell(
+            //           onTap: (){
+            //               googleauth().signInWithGoogle(context);
+
+            //         },
+            //           child: CircleAvatar(
+            //             backgroundImage: AssetImage('lib/assets/google.png'),
+            //             radius: 25,
+            //           ),
+            //         ),
+            //       ]
+            //   ),
+            // ),
             Container(
-              margin: EdgeInsets.only(top: 50),
+              margin: EdgeInsets.only(top: 50                               ),
+             // color: Colors.green,
+              height: 20,
               child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Login with ',style: TextStyle(color: TextColors.SecondaryTextColor,fontSize: 20),),
-                    InkWell(
-                      onTap: (){
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text("Don't have an account? ",style: TextStyle(color: TextColors.PrimaryTextColor),),
+                  InkWell(
+                    onTap: (){
+                      Get.toNamed('/signup');
+                    },
+                    child: Text("SignUp",style: TextStyle(color: CustomColors.primaryColor),),
+                  )
 
-
-                      },
-                      child: CircleAvatar(
-                        backgroundImage: AssetImage('lib/assets/google.png'),
-                        radius: 25,
-                      ),
-                    ),
-                  ]
+              ],
               ),
+              
             )
 
           ],
