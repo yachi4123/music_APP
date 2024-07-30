@@ -105,18 +105,6 @@ class _PlaylistPageState extends State<PlaylistPage> {
                             trailing: Container(
                               height: 55,
                               width: 60,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  IconButton(
-                                    onPressed: () {
-                                      musicController.removeFromPlaylist(musicController.currentPlaylistIndex, song);
-                                      musicController.fetchPlaylists();
-                                    },
-                                    icon: Icon(Icons.delete, size: 20, color: Colors.white),
-                                  ),
-                                ],
-                              ),
                             ),
                           );
                         },

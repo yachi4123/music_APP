@@ -96,11 +96,10 @@ class MusicController extends GetxController {
     super.onInit();
     search('');
     fetchRecentlyPlayedSongs();
-    getRecommendedArtists();
-    fetchPlaylists();
   }
 
   Future<void> getMadePlaylists() async{
+    madePlaylists.clear();
     getTop50();
     getTopDay();
     getNew();
@@ -158,6 +157,9 @@ class MusicController extends GetxController {
       for(var item in tracks){
         top50.add(item['track']);
       }
+      if(top50.length>50){
+        top50.removeRange(0, top50.length-50);
+      }
     } else {
       throw Exception('Failed to fetch trending songs');
     }
@@ -179,6 +181,9 @@ class MusicController extends GetxController {
       final List<dynamic> tracks = jsonResponse['items'];
       for(var item in tracks){
         old.add(item['track']);
+      }
+      if(old.length>50){
+        old.removeRange(0, old.length-50);
       }
     } else {
       throw Exception('Failed to fetch trending songs');
@@ -202,6 +207,9 @@ class MusicController extends GetxController {
       for(var item in tracks){
         party.add(item['track']);
       }
+      if(party.length>50){
+        party.removeRange(0, party.length-50);
+      }
     } else {
       throw Exception('Failed to fetch trending songs');
     }
@@ -223,6 +231,9 @@ class MusicController extends GetxController {
       final List<dynamic> tracks = jsonResponse['items'];
       for(var item in tracks){
         latestHindi.add(item['track']);
+      }
+      if(latestHindi.length>50){
+        latestHindi.removeRange(0, latestHindi.length-50);
       }
     } else {
       throw Exception('Failed to fetch trending songs');
@@ -246,6 +257,9 @@ class MusicController extends GetxController {
       for(var item in tracks){
         bollywood.add(item['track']);
       }
+      if(bollywood.length>50){
+        bollywood.removeRange(0, bollywood.length-50);
+      }
     } else {
       throw Exception('Failed to fetch trending songs');
     }
@@ -268,6 +282,9 @@ class MusicController extends GetxController {
       for(var item in tracks){
         newRelease.add(item['track']);
       }
+      if(newRelease.length>50){
+        newRelease.removeRange(0, newRelease.length-50);
+      }
     } else {
       throw Exception('Failed to fetch trending songs');
     }
@@ -289,6 +306,9 @@ class MusicController extends GetxController {
       final List<dynamic> tracks = jsonResponse['items'];
       for(var item in tracks){
         topDay.add(item['track']);
+      }
+      if(topDay.length>50){
+        topDay.removeRange(0, topDay.length-50);
       }
     } else {
       throw Exception('Failed to fetch trending songs');
@@ -542,12 +562,13 @@ Future<void> fetchTopArtistsForGenre(String genre) async {
     // for(var song in recentlyPlayed){
     //   id=id+song['id'];
     // } 
-    String id = recentlyPlayed.map((song) => song['id']).join(',');
+    String id = recentlyPlayed.take(5).map((song) => song['id']).join(',');
     final url = Uri.parse('https://api.spotify.com/v1/recommendations?seed_tracks=$id&limit=20');
     final String token = await _getAccessToken();
     final response = await http.get(url, headers: {
       'Authorization': 'Bearer $token',
     });    
+    print(response.statusCode);
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       songs.assignAll(data['tracks']);

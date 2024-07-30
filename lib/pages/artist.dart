@@ -103,15 +103,6 @@ class _ArtistPageState extends State<ArtistPage> {
                     trailing: Container(
                       height: 55,
                       width: 60,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            onPressed: () {},
-                            icon: Icon(Icons.more_vert, size: 30, color: Colors.white),
-                          ),
-                        ],
-                      ),
                     ),
                   );
                 },

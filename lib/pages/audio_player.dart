@@ -506,7 +506,7 @@ class _AudioPlayerPageState extends State<AudioPlayerPage> {
           Row(
           children: [
             Container(
-            padding: EdgeInsets.only(left: 140, right: 80),
+            padding: EdgeInsets.only(left: 130, right: 80),
             child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: CustomColors.primaryColor,

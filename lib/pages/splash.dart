@@ -44,6 +44,7 @@ with SingleTickerProviderStateMixin{
     });
     animationController.forward();
   }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body:Container(

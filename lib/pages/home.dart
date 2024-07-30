@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:app1/user_controller.dart';
 import 'package:app1/widgets/navbar.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +28,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    super.initState();
     username = user?.displayName??"user";
     profileURL = user?.photoURL?? userProfileURL;
     musicController.fetchRecentlyPlayedSongs();
@@ -34,7 +37,6 @@ class _HomePageState extends State<HomePage> {
     musicController.getSongs();
     GlobalVariable.instance.myGlobalVariable = 0;
     userController.getRequestsList();
-    super.initState();
   }
 
   Future<bool> _showExitConfirmationDialog() async {
@@ -185,6 +187,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: (){
                       musicController.currentPlaylist=musicController.recentlyPlayed;
                       musicController.currentPlaylistName="Recently Played";
+                      musicController.playlistName = "Recently Played";
                       // musicController.setPlaylist();
                       musicController.currentSong.value = song;
                       // musicController.audioPlayer.setAudioSource(musicController.playlist,preload: false);
@@ -321,8 +324,12 @@ class _HomePageState extends State<HomePage> {
               scrollDirection: Axis.horizontal,
               itemCount: 7,
               itemBuilder: (context, index) {
-                var value = musicController.madePlaylists[index];
+                if(musicController.madePlaylists.length != 7 ){
+                  return SizedBox.shrink();
+                }
+                try{
                 var name = musicController.madePlaylistNames[index];
+                var value = musicController.madePlaylists[index];
                 return GestureDetector(
                   onTap: () {
                     musicController.currentPlaylist = value;
@@ -349,6 +356,10 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 );
+                }
+                catch(e){
+                  return SizedBox.shrink();
+                }
               },
             ),
           ),
@@ -380,6 +391,7 @@ class _HomePageState extends State<HomePage> {
                     onTap: (){
                       musicController.currentPlaylist=musicController.songs;
                       musicController.currentPlaylistName="Songs You Might Like";
+                      musicController.playlistName="Recommendations";
                       // musicController.setPlaylist();
                       musicController.currentSong.value = song;
                       // musicController.audioPlayer.setAudioSource(musicController.playlist,preload: false);
