@@ -1,6 +1,8 @@
 # Music-App
 
-[![Watch the Demo](https://img.youtube.com/vi/VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+
+https://github.com/user-attachments/assets/95a58fba-fd8e-4451-8238-42a6988a01d8
+
 
 
 MusicApp is a dynamic Flutter application designed to provide an exceptional music experience. It allows users to explore a vast collection of songs and artists through an API, create personalized home pages, manage profiles, add friends, share songs, download music for offline listening, and more.
